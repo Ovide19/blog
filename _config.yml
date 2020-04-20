@@ -118,8 +118,8 @@ author:
       icon: "fab fa-fw fa-instagram"
       # url: "https://instagram.com/"
     - label: "LinkedIn"
-      icon: "fab fa-fw linkedin"
-      #url: "https://www.linkedin.com/in/sheldonwarden/"
+      icon: "fab fa-linkedin"
+      url: "https://www.linkedin.com/in/sheldonwarden/"
 
 # Site Footer
 footer:
