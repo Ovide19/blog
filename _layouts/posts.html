@@ -28,11 +28,10 @@ layout: archive
   </section>
 {% endfor %}
 
+{%- assign date_format = site.minima.date_format | default: '%b %-d, %Y' -%}
 
-{% for tag in post.tags %}
-  {%assign tag_slug = tag | slugify: "raw" %}
-  <a class="tag-link"
-    href={{ site.baseurl | append: "/tags" | append: tag_slug | append: "/" }}
-    rel="category tag">
-  </a>
-{% endfor %}
+{%- if page.last_modified_at -%}
+    Last updated: {%- page.last_modified_at | date: date_format -%}
+{%- else -%}
+    Last updated: {%- page.date | date: date_format -%}
+{%- endif -%}
