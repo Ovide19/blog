@@ -107,7 +107,7 @@ def draw_cathedral_contour(name):
                y2=np.int((int(y) + np.int(MA)*np.cos(ellipse_angle * np.pi / 180.0))) 
                cv2.line(background, (x1, y1), (x2, y2),(255,0,255),4) 
 
-               cv2.putText(background, name+ ': Orientation ' + str(int(ellipse_angle))+'°', (100,50),cv2.FONT_HERSHEY_SIMPLEX , 0.6, (255,0,255),thickness=1)
+               cv2.putText(background, name+ ': Orientation ' + str(int(ellipse_angle))+' degrees', (100,50),cv2.FONT_HERSHEY_SIMPLEX , 0.6, (255,0,255),thickness=1)
                cv2.imwrite("./"+name+"_binary.jpg",background)
                return ellipse_angle
 ```
