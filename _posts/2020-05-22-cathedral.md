@@ -65,6 +65,8 @@ def create_static_map(name):
 `create_static_map` simply turns the html file into a 1000 pixels x 1000 pixels image. This is where Selenium steps in.
 Python will throw a UserWarning error but the function will do its job nonetheless.
 
+![Contour of Strasbourg cathedral](/blog/assets/images/Strasbourg.png)
+
 ### 3. Delineating the contour of the cathedral
 
 Now the fun part begins:
@@ -142,6 +144,7 @@ Once we have identified the contour of interest, we can find its center, and fit
 OK, time for a sanity check!
 Let’s first grab the cathedral’s coordinates from [this Wikipedia entry](https://en.wikipedia.org/wiki/List_of_tallest_church_buildings): the latitude is 48.581808 and the longitude is 7.750361. 
 
+```python
 if __name__ == '__main__':
      name='Strasbourg'
      latitude=48.581808
@@ -151,8 +154,11 @@ if __name__ == '__main__':
      angle=draw_cathedral_contour(name)
      print(Catheral: 'name')
      print('Orientation:'+str(int(angle))+'°')
+```
 
+This creates our binary map:
 
+![Contour of Strasbourg cathedral](/blog/assets/images/Strasbourg_binary.jpg)
 
 
 
