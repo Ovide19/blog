@@ -47,7 +47,7 @@ def create_html_map(name,latitude,longitude):
      return
 ```
 
-`create_html_map` is fed the name, latitude and longitude of a building and returns a map centered on the building’s coordinates as an html file. The `zoom_start` parameter is the initial zoom level: a value of 18 basically means that the world map is split into 2^18 tiles, the maximum zoom level allowed by leaflet.
+`create_html_map` is fed the name, latitude and longitude of a building and returns a map centered on the building’s coordinates as a html file. The `zoom_start` parameter is the initial zoom level: a value of 18 basically means that the world map is split into 2^18 tiles, the maximum zoom level allowed by leaflet.
 
 ### 3. Converting the html map to a static image
 
@@ -63,10 +63,10 @@ def create_static_map(name):
      return
 ```
 
-This is where Selenium steps in: it allows us to use [PhantomJS](https://phantomjs.org/) a headless browser that opens our html file and takes a screenshot of the map.
-To play things safe, `time.sleep()` buys PhantomJS 3 seconds to load the html file. This prevents the map from being only partially loaded when the screenshot is taken.
+This is where Selenium steps in: it allows us to use [PhantomJS](https://phantomjs.org/), a headless browser that opens our html file and takes a screenshot of the map.
+To play things safe, `time.sleep(3)` buys PhantomJS 3 seconds to load the html file. This prevents the map from being only partially loaded when the screenshot is taken.
 
-Just be aware that since the development of PhantomJS is suspended until further notice, Python will throw a UserWarning error. No sweat: `create_static_map` will do its job nonetheless, *i.e.* it will turn our html file into a 1000 pixels x 1000 pixels square image: 
+Just be aware that since the development of PhantomJS is currently suspended, Python will throw a `UserWarning` error. No sweat: `create_static_map` will do its job nonetheless, *i.e.* it will turn our html file into a 1000 pixels x 1000 pixels square image of Strasbourg's city center: 
 
 ![Contour of Strasbourg cathedral](/blog/assets/images/Strasbourg.png)
 
@@ -116,41 +116,44 @@ def draw_cathedral_contour(name):
 ```
 
 What's going on here?
+
 Well, `draw_cathedral_contour` first creates a color-based mask. Opening our newly created png image using GIMP or another editor reveals that the dark gray color filling the buildings has a BGR value of (204, 204, 204).  Setting up low_gray to (200, 200, 200) and high_gray to (210, 210, 210) therefore allows us to delineate the buildings. 
 Note that if you are using another style than “Stamen Terrain” or working with another mapping tool, you will need to adjust these thresholds accordingly. And if your target is filled with a color other than gray, just keep in mind that OpenCV relies on BGR color instead of RGB!
 
-Our function then delineates all buildings using cv2’s findContours built-in method. findContours is fed three arguments:
+Our function then delineates all buildings using cv2’s `findContours` built-in method. `findContours` is fed three arguments:
 
 - our `gray_mask`.
-- the contour retrieval mode `cv.RETR_TREE`, which not only retrieves all contours but also sorts them hierarchically.
+- the contour retrieval mode `cv.RETR_TREE`, which not only retrieves all contours but also sorts them hierarchically... Quite usefule when dealing with nested contours!
 - the contour approximation method `cv.CHAIN_APPROX_SIMPLE`. This method removes the redundant points in the contour, thus allowing to save memory.
 
 So `findContours` returns the contours of all the buildings in the image… But remember, we are only interested in the cathedral! 
 
 Good news are, thanks to create_html_map, our image is centered on our GPS waypoint, so the cathedral’s contour should encompass the center of the image.
-Let’s loop over all contours and find which of those meets this requirements. To do this we use pointPolygonTest built-in method: 
+Let’s loop over all contours and find which of those meets this requirements. To do this we use the `pointPolygonTest` built-in method: 
 
 ```python
 test=cv2.pointPolygonTest(contour, image_center, measureDist=False) 
 ```
 
-If the contour contains image_center, then `test` is equal to 1.
+If the contour contains `image_center`, then `test` is equal to 1.
 
-We’re almost there! For the sake of clarity, let’s create a black background the size of our original image and let’s display the contour of the cathedral in white:
+We’re almost there! 
+
+Now that we have nailed down the cathedral's contour, let’s create a black background the size of our original image and let’s display this contour in white:
 
 ```python
 background = np.zeros(img.shape).astype(img.dtype)
 cv2.drawContours(background, [cathedral_contour], -1, (255, 255, 255), -1)
 ```
 
-Once identified the contour of interest has been identified, we can find its center, and fit an ellipse around it using openCV’s fitEllipse function:
+We can now find the contour's center, and fit an ellipse around it using openCV’s `fitEllipse` function:
 
 ```python
 cv2.ellipse(background, (int(x),int(y)), (np.int(MA),np.int(ma)), ellipse_angle, 
 np.int(ellipse_angle), np.int(ellipse_angle+360), (255,0,255), 1)
 ```
 
-This function calculates the ellipse that best fits a set of 2D point in the least-square sense: it returns the center of the ellipse, the semi-minor and semi-major axes and last but not least angle of the rotated rectangle in which the ellipse is inscribed. This angle is what we are interested into: the orientation of the nave. We can simply display it on our final image using OpenCV's `putText` method:
+This function calculates the ellipse that best fits a set of 2D point in the least-square sense: it returns the center of the ellipse, the semi-minor and semi-major axes and last but not least angle of the rotated rectangle in which the ellipse is inscribed. This angle is what we are interested into: it gives the orientation of the nave. We can simply display it on our final image using OpenCV's `putText` method:
 
 ```python
 cv2.putText(background, name+ ': Orientation ' + str(int(ellipse_angle))+' degrees', (100,50),cv2.FONT_HERSHEY_SIMPLEX , 0.6, (255,0,255),thickness=1)
@@ -178,7 +181,17 @@ if __name__ == '__main__':
 
 ![Contour of Strasbourg cathedral](/blog/assets/images/Strasbourg_binary.jpg)
 
+Done! Well, before going any further, there's a caveat you should know about: finding the nave's orientation by fitting the cathedral's contour with an ellipse works because the Strasbourg cathedral is roughly symmetrical. If you are interested into a building with an asymmetrical floor plan, you will need to find another way to define its orientation.
 
+Now back to the Strasbourg cathedral. A lot of religious edifices are oriented eastwards, so what's up with the 60°? Is this angle associated with the sun's rising point during a symbolic time of the year, such as an equinox? To clarify the matter, I called my friend Aymeric, who works as a stonemason at the *Fondation de l'Oeuvre de Notre Dame*. It turns out that the solution is much more pragmatic. Strasbourg -or *Argentoratum* as it was called back then- was a former Roman military outpost established in 12 BC:
+
+![Model of Argentoratum](/blog/assets/images/argentoratum.jpg)
+
+Its two main roads were the *via principalis* and the *via praetoria*. The latter is roughly oriented north-northeast (NNE): when the first cathedral was commissioned by the bishop Arbogast by the end of the 7th century, it was naturally aligned along these pre-existing roads!
+
+![Via Principalis and Via Pratoria](/blog/assets/images/argentoratum2.jpg)
+
+ 	
 
 
 
