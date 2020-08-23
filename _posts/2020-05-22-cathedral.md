@@ -123,7 +123,7 @@ Note that if you are using another style than “Stamen Terrain” or working wi
 Our function then delineates all buildings using cv2’s `findContours` built-in method. `findContours` is fed three arguments:
 
 - our `gray_mask`.
-- the contour retrieval mode `cv.RETR_TREE`, which not only retrieves all contours but also sorts them hierarchically... Quite usefule when dealing with nested contours!
+- the contour retrieval mode `cv.RETR_TREE`, which not only retrieves all contours but also sorts them hierarchically... Quite useful when dealing with nested contours!
 - the contour approximation method `cv.CHAIN_APPROX_SIMPLE`. This method removes the redundant points in the contour, thus allowing to save memory.
 
 So `findContours` returns the contours of all the buildings in the image… But remember, we are only interested in the cathedral! 
